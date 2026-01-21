@@ -108,7 +108,7 @@ const App: React.FC = () => {
             return next;
         });
         setPhase('work');
-    }, 1000);
+    }, 800);
   };
 
   const playCard = (card: GameCard) => {
@@ -181,8 +181,22 @@ const App: React.FC = () => {
       window.location.reload();
   };
 
+  // Score and Rank calculation logic
+  const calculateScore = () => {
+    return Math.floor(gameState.day * 100 + Math.max(0, gameState.money / 10) + (gameState.kpi * 5));
+  };
+
+  const getRank = () => {
+    const score = calculateScore();
+    if (score < 500) return { title: "临时工", color: "text-slate-400" };
+    if (score < 1500) return { title: "成熟的牛马", color: "text-cyan-400" };
+    if (score < 3000) return { title: "部门顶梁柱", color: "text-amber-400" };
+    if (score < 5000) return { title: "职场不倒翁", color: "text-rose-400" };
+    return { title: "赛博仙人", color: "text-violet-400" };
+  };
+
   return (
-    <div className="min-h-screen p-4 md:p-8 flex flex-col gap-6 max-w-6xl mx-auto">
+    <div className="min-h-screen p-4 md:p-8 flex flex-col gap-6 max-w-6xl mx-auto relative">
       {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-gradient-to-r from-slate-900/80 to-slate-800/50 p-6 rounded-3xl border border-white/10 shadow-2xl backdrop-blur-xl">
         <div>
@@ -205,6 +219,22 @@ const App: React.FC = () => {
           )}
         </div>
       </header>
+
+      {/* Morning Phase Overlay - Centered Button */}
+      {phase === 'morning' && gameState.day > 1 && !gameState.isDefeated && (
+        <div className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="glass p-12 rounded-[40px] border-cyan-500/20 text-center shadow-2xl animate-in fade-in zoom-in-95 duration-500">
+            <h2 className="text-4xl font-black text-white mb-2 font-mono-jb tracking-tighter">DAY {gameState.day}</h2>
+            <p className="text-slate-400 mb-8 max-w-xs mx-auto">闹钟响了，新的一轮社会化毒打正在加载中...</p>
+            <button 
+                onClick={startDay}
+                className="px-12 py-5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xl font-black rounded-3xl shadow-2xl shadow-cyan-500/40 transition-all active:scale-95 animate-gentle-pulse"
+            >
+                开启新的一天
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Resource Grid */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -343,50 +373,75 @@ const App: React.FC = () => {
                 ))}
             </div>
           </div>
-          
-          {/* Bottom Bar for Morning phase */}
-          {phase === 'morning' && gameState.day > 1 && !gameState.isDefeated && (
-              <div className="flex-grow flex items-center justify-center">
-                  <button 
-                    onClick={startDay}
-                    className="px-12 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black rounded-2xl shadow-2xl shadow-cyan-500/30 transition-all active:scale-95 animate-gentle-pulse"
-                  >
-                    开启新的一天
-                  </button>
-              </div>
-          )}
         </div>
       </div>
 
-      {/* Defeat Modal */}
+      {/* Comprehensive Summary Page / Defeat Modal */}
       {gameState.isDefeated && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
-          <div className="glass max-w-lg w-full p-8 rounded-[40px] border-red-500/30 text-center shadow-2xl animate-in zoom-in-95 duration-300">
-            <div className="w-20 h-20 bg-red-500/20 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6 text-4xl border border-red-500/30">
-                ☠️
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-xl">
+          <div className="glass max-w-2xl w-full p-8 md:p-12 rounded-[40px] border-white/10 text-center shadow-2xl animate-in zoom-in-95 duration-500 overflow-y-auto max-h-[95vh] custom-scrollbar">
+            <div className="inline-block px-4 py-1 rounded-full bg-red-500/10 text-red-500 border border-red-500/20 text-xs font-bold tracking-widest uppercase mb-4">
+                Challenge Ended
             </div>
-            <h2 className="text-4xl font-black text-white mb-2 italic uppercase tracking-tighter">GAME OVER</h2>
-            <p className="text-slate-400 text-sm mb-6 uppercase tracking-widest font-bold">都市生存挑战失败</p>
+            <h2 className="text-5xl font-black text-white mb-2 italic uppercase tracking-tighter">成绩汇总</h2>
+            <div className={`text-2xl font-black mb-10 ${getRank().color}`}>
+                称号：{getRank().title}
+            </div>
             
-            <div className="bg-slate-900/50 p-6 rounded-2xl border border-white/5 mb-8 text-left italic">
-                <p className="text-slate-300 leading-relaxed">“{gameState.defeatReason}”</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+                <div className="bg-slate-900/40 p-4 rounded-2xl border border-white/5">
+                    <div className="text-[10px] text-slate-500 font-bold uppercase mb-1">生存天数</div>
+                    <div className="text-3xl font-black font-mono-jb">{gameState.day}</div>
+                </div>
+                <div className="bg-slate-900/40 p-4 rounded-2xl border border-white/5">
+                    <div className="text-[10px] text-slate-500 font-bold uppercase mb-1">最终得分</div>
+                    <div className="text-3xl font-black font-mono-jb text-cyan-400">{calculateScore()}</div>
+                </div>
+                <div className="bg-slate-900/40 p-4 rounded-2xl border border-white/5">
+                    <div className="text-[10px] text-slate-500 font-bold uppercase mb-1">剩余存款</div>
+                    <div className="text-2xl font-black font-mono-jb text-emerald-400">¥{gameState.money}</div>
+                </div>
+                <div className="bg-slate-900/40 p-4 rounded-2xl border border-white/5">
+                    <div className="text-[10px] text-slate-500 font-bold uppercase mb-1">职场表现</div>
+                    <div className="text-2xl font-black font-mono-jb text-amber-400">{gameState.kpi}%</div>
+                </div>
             </div>
 
-            <div className="flex flex-col gap-3">
+            <div className="bg-slate-900/60 p-6 rounded-3xl border border-white/10 mb-10 text-left italic relative">
+                <div className="absolute -top-3 left-6 px-3 py-0.5 bg-slate-800 rounded-full text-[10px] text-slate-400 border border-white/10">结局描述</div>
+                <p className="text-slate-300 leading-relaxed text-lg">“{gameState.defeatReason}”</p>
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-4">
+                <button 
+                    onClick={() => {
+                        // Simulated share logic - alert or copy text
+                        const text = `我在《都市牛马模拟器 2.0》中存活了 ${gameState.day} 天，获得了“${getRank().title}”称号！最终得分：${calculateScore()}。你也来试试这份社会化的毒打吧！`;
+                        navigator.clipboard.writeText(text);
+                        alert("成绩已复制到剪贴板！去分享你的牛马人生吧！");
+                    }}
+                    className="flex-1 py-4 bg-slate-800 text-white font-black rounded-2xl hover:bg-slate-700 transition-colors border border-white/10 flex items-center justify-center gap-2"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 100-2.684 3 3 0 000 2.684zm0 9a3 3 0 100-2.684 3 3 0 000 2.684z"></path></svg>
+                    复制战绩分享
+                </button>
                 <button 
                     onClick={resetGame}
-                    className="w-full py-4 bg-white text-slate-950 font-black rounded-2xl hover:bg-slate-200 transition-colors"
+                    className="flex-1 py-4 bg-white text-slate-950 font-black rounded-2xl hover:bg-slate-200 transition-colors shadow-lg shadow-white/5 flex items-center justify-center gap-2"
                 >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     重启周目
                 </button>
             </div>
+            
+            <p className="mt-8 text-[10px] text-slate-600 uppercase tracking-[0.2em]">Urban Wage Slave Simulator v2.0 Recap Service</p>
           </div>
         </div>
       )}
 
       {/* Footer Meta */}
       <footer className="mt-auto py-8 text-center">
-        <div className="flex justify-center gap-4 mb-4 opacity-50">
+        <div className="flex justify-center flex-wrap gap-4 mb-4 opacity-50">
             {TALENTS.map(t => (
                 <div key={t.id} className="text-[10px] font-bold px-3 py-1 rounded-full border border-white/20 bg-white/5 text-slate-400">
                     {t.name}: {t.desc}
