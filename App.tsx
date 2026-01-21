@@ -346,10 +346,10 @@ const App: React.FC = () => {
           
           {/* Bottom Bar for Morning phase */}
           {phase === 'morning' && gameState.day > 1 && !gameState.isDefeated && (
-              <div className="flex-grow flex items-center justify-center animate-bounce">
+              <div className="flex-grow flex items-center justify-center">
                   <button 
                     onClick={startDay}
-                    className="px-12 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black rounded-2xl shadow-2xl shadow-cyan-500/30 transition-all active:scale-95"
+                    className="px-12 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black rounded-2xl shadow-2xl shadow-cyan-500/30 transition-all active:scale-95 animate-gentle-pulse"
                   >
                     开启新的一天
                   </button>
